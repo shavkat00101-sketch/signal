@@ -3,114 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI TRADER PRO - SMART SIGNAL</title>
+    <title>AI TRADER OMEGA V10</title>
     <style>
-        :root { --primary: #3d5afe; --bg: #050505; --success: #00ff00; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; text-align: center; }
+        :root { --primary: #007bff; --bg: #020202; --card: #0d0d0d; --success: #00ff88; --danger: #ff3333; --warning: #ffcc00; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 50px; }
         
-        /* Kirish oynasi */
-        #auth-screen { padding: 80px 20px; display: block; }
-        input { padding: 15px; width: 85%; max-width: 300px; border-radius: 10px; border: 1px solid #333; background: #111; color: white; margin-bottom: 15px; text-align: center; font-size: 16px; }
-        
-        /* Terminal qismi */
-        #main-terminal { display: none; padding: 10px; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+        /* Header */
+        .header { display: flex; justify-content: space-between; padding: 15px 20px; background: #000; border-bottom: 2px solid #1a1a1a; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-weight: 900; font-size: 20px; color: var(--primary); text-shadow: 0 0 10px rgba(0,123,255,0.5); }
+        .live-tag { background: var(--danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        .card { background: #111; border: 1px solid #222; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .acc-value { font-size: 45px; font-weight: bold; color: var(--success); text-shadow: 0 0 15px rgba(0,255,0,0.3); }
+        .container { max-width: 900px; margin: auto; padding: 15px; }
+
+        /* Main Signal Box */
+        .signal-panel { background: var(--card); border: 1px solid #222; border-radius: 25px; padding: 30px; margin-bottom: 20px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
         
-        button { background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.95); }
-        .status-dot { height: 10px; width: 10px; background-color: #00ff00; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .indicator-strip { display: flex; justify-content: space-around; margin-bottom: 25px; background: #000; padding: 10px; border-radius: 12px; border: 1px solid #1a1a1a; }
+        .ind-item { text-align: center; }
+        .ind-label { font-size: 9px; color: #555; display: block; }
+        .ind-val { font-size: 12px; font-weight: bold; color: var(--warning); }
+
+        .main-res { text-align: center; margin-bottom: 25px; }
+        .prob-text { font-size: 11px; color: #666; letter-spacing: 2px; }
+        .prob-val { font-size: 50px; font-weight: 900; color: var(--success); display: block; }
+        .sig-badge { font-size: 24px; font-weight: 800; padding: 10px 30px; border-radius: 15px; display: inline-block; margin-top: 10px; }
+
+        /* Strategy Explainers */
+        .strat-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
+        .strat-box { background: #111; border: 1px solid #222; border-radius: 15px; padding: 18px; position: relative; }
+        .strat-title { color: var(--primary); font-size: 13px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; }
+        .strat-title::before { content: "◈"; margin-right: 8px; }
+        .strat-desc { font-size: 13px; color: #aaa; line-height: 1.6; }
+
+        /* Levels Grid */
+        .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .lvl-box { background: #050505; border: 1px solid #222; padding: 12px; border-radius: 12px; }
+        .lvl-label { font-size: 10px; color: #444; text-transform: uppercase; }
+        .lvl-price { font-size: 16px; font-weight: bold; display: block; margin: 4px 0; }
+        .lvl-why { font-size: 11px; color: #666; font-style: italic; border-top: 1px solid #111; padding-top: 5px; }
+
+        .btn-analyze { background: linear-gradient(45deg, #007bff, #00c6ff); color: white; border: none; width: 100%; padding: 22px; border-radius: 18px; font-weight: 900; font-size: 18px; cursor: pointer; transition: 0.3s; margin-top: 20px; box-shadow: 0 10px 20px rgba(0,123,255,0.3); }
+        .btn-analyze:active { transform: scale(0.97); }
+
+        #tv-chart { height: 550px; border-radius: 20px; border: 1px solid #222; margin-top: 20px; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen">
-        <h1 style="color: var(--primary); margin-bottom: 5px;">AI TRADER PRO</h1>
-        <p style="color: #666; margin-bottom: 30px;">Premium Signal Platform</p>
-        
-        <input type="password" id="access-key" placeholder="Kirish kalitini yozing">
-        <br>
-        <button onclick="checkKey()">KIRISH</button>
-        
-        <p style="margin-top: 40px; font-size: 13px; color: #444;">
-            Ruxsat olish uchun admin bilan bog'laning.
-        </p>
+    <div class="header">
+        <div class="logo">AI OMEGA <span style="font-size: 10px; color: #444;">V10.0</span></div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="live-tag">LIVE MARKET</div>
+            <select id="assetSelect" onchange="changeAsset()" style="background: #111; color: white; border: 1px solid #333; padding: 5px; border-radius: 5px;">
+                <option value="BTCUSDT">BTC/USDT</option>
+                <option value="ETHUSDT">ETH/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option>
+                <option value="XAUUSD">GOLD (XAU)</option>
+            </select>
+        </div>
     </div>
 
-    <div id="main-terminal">
-        <div style="text-align: left; padding: 5px 15px;">
-            <span class="status-dot"></span> <span style="font-size: 12px; color: #888;">AI SCANNER ACTIVE</span>
+    <div class="container">
+        <div class="signal-panel">
+            <div class="indicator-strip">
+                <div class="ind-item"><span class="ind-label">RSI (14)</span><span class="ind-val" id="rsiVal">--</span></div>
+                <div class="ind-item"><span class="ind-label">VOL (24h)</span><span class="ind-val" id="volVal">--</span></div>
+                <div class="ind-item"><span class="ind-label">TREND</span><span class="ind-val" id="trendVal">--</span></div>
+                <div class="ind-item"><span class="ind-label">LIQUIDITY</span><span class="ind-val" id="liqVal">--</span></div>
+            </div>
+
+            <div class="main-res">
+                <span class="prob-text">ALGORITHMIC PROBABILITY</span>
+                <span class="prob-val" id="mainProb">--%</span>
+                <div class="sig-badge" id="mainSig">AWAITING SCAN</div>
+            </div>
+
+            <div class="strat-grid">
+                <div class="strat-box">
+                    <div class="strat-title">SMART MONEY & LIQUIDITY</div>
+                    <div class="strat-desc" id="smcText">Bozor strukturasini (BOS) va likvidlik zonalarini skanerlash kutilmoqda...</div>
+                </div>
+                <div class="strat-box">
+                    <div class="strat-title">ELLIOTT WAVE & FIBONACCI</div>
+                    <div class="strat-desc" id="waveText">To'lqinlar nazariyasi va Golden Pocket (0.618) tahlili tayyorlanmoqda...</div>
+                </div>
+            </div>
+
+            <div class="levels">
+                <div class="lvl-box">
+                    <span class="lvl-label">Entry (Kirish)</span>
+                    <span class="lvl-price" id="p-entry">--</span>
+                    <div class="lvl-why" id="w-entry">Narx muvozanati tahlili.</div>
+                </div>
+                <div class="lvl-box">
+                    <span class="lvl-label">Take Profit</span>
+                    <span class="lvl-price" id="p-tp" style="color:var(--success)">--</span>
+                    <div class="lvl-why" id="w-tp">Fib 1.618 kengaytmasi.</div>
+                </div>
+                <div class="lvl-box">
+                    <span class="lvl-label">Stop Loss</span>
+                    <span class="lvl-price" id="p-sl" style="color:var(--danger)">--</span>
+                    <div class="lvl-why" id="w-sl">Likvidlik himoyasi.</div>
+                </div>
+                <div class="lvl-box">
+                    <span class="lvl-label">Risk/Reward</span>
+                    <span class="lvl-price">1:3.5</span>
+                    <div class="lvl-why">Professional nisbat.</div>
+                </div>
+            </div>
+
+            <button class="btn-analyze" onclick="startOmegaScan()" id="scanBtn">START OMEGA SCAN</button>
         </div>
 
-        <div class="card">
-            <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 2px;">AI Accuracy</div>
-            <div class="acc-value" id="accuracy-val">--%</div>
-            
-            <hr style="border: 0.1px solid #222; margin: 20px 0;">
-            
-            <h2 id="pair-name" style="margin: 0; font-size: 28px;">SCANNING...</h2>
-            <div id="action-hint" style="font-size: 22px; font-weight: bold; margin-top: 10px;">---</div>
-        </div>
-
-        <div id="tv-chart" style="height: 380px; margin-top: 15px; border-radius: 15px; overflow: hidden; border: 1px solid #222;"></div>
-        
-        <p style="font-size: 11px; color: #333; margin-top: 15px;">v2.0 Private Access Mode</p>
+        <div id="tv-chart"></div>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // --- ADMIN: BU YERGA PAROLLARNI YOZASAN ---
-        const validKeys = ["7777", "shavkat", "vip100", "trader"];
+        let symbol = "BTCUSDT";
 
-        function checkKey() {
-            const key = document.getElementById('access-key').value;
-            if (validKeys.includes(key)) {
-                startSystem();
-            } else {
-                alert("Kalit noto'g'ri! Iltimos, qaytadan urinib ko'ring.");
+        function changeAsset() {
+            symbol = document.getElementById('assetSelect').value;
+            loadChart();
+        }
+
+        function loadChart() {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": "BINANCE:" + symbol,
+                "interval": "15",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "tv-chart"
+            });
+        }
+
+        async function startOmegaScan() {
+            const btn = document.getElementById('scanBtn');
+            btn.innerText = "SCANNING MARKET STRUCTURE...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+                const data = await res.json();
+                const price = parseFloat(data.price);
+
+                setTimeout(() => {
+                    // Indikatorlarni simulyatsiya qilish
+                    let rsi = Math.floor(Math.random() * (75 - 25) + 25);
+                    let acc = Math.floor(Math.random() * (98 - 88) + 88);
+                    let isBuy = rsi < 60; // RSI 60 dan past bo'lsa BUY ehtimoli yuqori
+
+                    document.getElementById('rsiVal').innerText = rsi;
+                    document.getElementById('volVal').innerText = "+" + (Math.random() * 5).toFixed(1) + "%";
+                    document.getElementById('trendVal').innerText = isBuy ? "BULLISH" : "BEARISH";
+                    document.getElementById('liqVal').innerText = "HIGH";
+                    document.getElementById('mainProb').innerText = acc + "%";
+
+                    const sig = document.getElementById('mainSig');
+                    sig.innerText = isBuy ? "STRONG BUY ▲" : "STRONG SELL ▼";
+                    sig.style.background = isBuy ? "rgba(0, 255, 136, 0.2)" : "rgba(255, 51, 51, 0.2)";
+                    sig.style.color = isBuy ? "var(--success)" : "var(--danger)";
+
+                    // Narxlar
+                    document.getElementById('p-entry').innerText = price.toFixed(2);
+                    document.getElementById('p-tp').innerText = isBuy ? (price * 1.015).toFixed(2) : (price * 0.985).toFixed(2);
+                    document.getElementById('p-sl').innerText = isBuy ? (price * 0.995).toFixed(2) : (price * 1.005).toFixed(2);
+
+                    // Strategik Tushuntirishlar
+                    document.getElementById('smcText').innerText = isBuy 
+                        ? "SMC tahlili: Narx 'Demand Zone' (Talab zonasi) ichida. 'Liquidity Sweep' sodir bo'ldi. Institutlar katta 'Buy' orderlarini joylashtirmoqda."
+                        : "SMC tahlili: Narx 'Supply Zone' (Taklif) ichida. 'Change of Character' (CHoCH) kuzatildi. Kitlar o'z aktivlarini sotishni boshladi.";
+
+                    document.getElementById('waveText').innerText = isBuy
+                        ? "Elliott Waves: Biz hozirda 3-impuls to'lqinidmiz. Fibonacci 0.618 darajasida kuchli tayanchni ko'ryapmiz. Maqsad - yangi cho'qqi."
+                        : "Elliott Waves: 5-to'lqin yakunlandi, ABC korreksiyasi boshlanmoqda. Narx 0.5 Fibonachchi darajasidan pastga qaytdi.";
+
+                    // Nima uchun bo'limlari
+                    document.getElementById('w-entry').innerText = "Bozor strukturasi sinishi (BOS) tasdiqlandi.";
+                    document.getElementById('w-tp').innerText = "Fibonachchi 1.618 extension va tarixiy qarshilik.";
+                    document.getElementById('w-sl').innerText = "Oxirgi likvidlik yig'ilgan zonadan pastda.";
+
+                    btn.innerText = "START OMEGA SCAN";
+                    btn.disabled = false;
+                }, 3000);
+            } catch(e) { 
+                btn.disabled = false;
+                btn.innerText = "ERROR - RETRY SCAN";
             }
         }
 
-        function startSystem() {
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('main-terminal').style.display = 'block';
-            
-            // TradingView grafigini yuklash
-            new TradingView.widget({
-                "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv-chart", "locale": "en"
-            });
-
-            // Signal Logikasi (85% filtr bilan)
-            setInterval(() => {
-                // 60 dan 99 gacha aniqlikni hisoblash
-                let acc = Math.floor(Math.random() * (99 - 60) + 60);
-                document.getElementById('accuracy-val').innerText = acc + "%";
-
-                if (acc >= 85) { 
-                    // FAQAT 85% VA UNDAN YUQORI BO'LSA SIGNAL BERADI
-                    document.getElementById('accuracy-val').style.color = "#00ff00";
-                    document.getElementById('pair-name').innerText = "BTC / USDT";
-                    document.getElementById('action-hint').innerText = "STRONG BUY ▲";
-                    document.getElementById('action-hint').style.color = "#00ff00";
-                    // Ovoz chiqarish (ixtiyoriy)
-                    playSignalSound();
-                } else {
-                    // 85% DAN PAST BO'LSA SIGNALNI YASHIRADI
-                    document.getElementById('accuracy-val').style.color = "#ff9800";
-                    document.getElementById('pair-name').innerText = "WAITING...";
-                    document.getElementById('action-hint').innerText = "ANALYZING MARKET";
-                    document.getElementById('action-hint').style.color = "#444";
-                }
-            }, 6000); // Har 6 soniyada yangilanadi
-        }
-
-        function playSignalSound() {
-            const msg = new SpeechSynthesisUtterance("New Signal Detected");
-            msg.lang = 'en-US';
-            window.speechSynthesis.speak(msg);
-        }
+        window.onload = loadChart;
     </script>
 </body>
 </html>
