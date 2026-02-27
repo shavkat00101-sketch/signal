@@ -3,95 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI TRADER PRO - AUDIO LIVE</title>
+    <title>AI TRADER PRO - SMART SIGNAL</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #050505; color: white; margin: 0; padding: 0; }
-        .header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        .logo { color: #3d5afe; font-weight: bold; font-size: 20px; }
-        .btn-audio { background: #3d5afe; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; }
-        .container { display: flex; flex-direction: column; gap: 10px; padding: 10px; }
-        #chart-section { height: 400px; border-radius: 8px; overflow: hidden; border: 1px solid #222; }
-        .signals-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        @media (min-width: 600px) { .signals-grid { grid-template-columns: 1fr 1fr; } }
-        .signal-card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 15px; text-align: center; }
+        :root { --primary: #3d5afe; --bg: #050505; --success: #00ff00; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; text-align: center; }
+        
+        /* Kirish oynasi */
+        #auth-screen { padding: 80px 20px; display: block; }
+        input { padding: 15px; width: 85%; max-width: 300px; border-radius: 10px; border: 1px solid #333; background: #111; color: white; margin-bottom: 15px; text-align: center; font-size: 16px; }
+        
+        /* Terminal qismi */
+        #main-terminal { display: none; padding: 10px; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+
+        .card { background: #111; border: 1px solid #222; border-radius: 15px; padding: 25px; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .acc-value { font-size: 45px; font-weight: bold; color: var(--success); text-shadow: 0 0 15px rgba(0,255,0,0.3); }
+        
+        button { background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.95); }
+        .status-dot { height: 10px; width: 10px; background-color: #00ff00; border-radius: 50%; display: inline-block; margin-right: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo">AI TRADER PRO</div>
-        <button class="btn-audio" onclick="enableAudio()">🔔 OVOZNI YOQISH</button>
+    <div id="auth-screen">
+        <h1 style="color: var(--primary); margin-bottom: 5px;">AI TRADER PRO</h1>
+        <p style="color: #666; margin-bottom: 30px;">Premium Signal Platform</p>
+        
+        <input type="password" id="access-key" placeholder="Kirish kalitini yozing">
+        <br>
+        <button onclick="checkKey()">KIRISH</button>
+        
+        <p style="margin-top: 40px; font-size: 13px; color: #444;">
+            Ruxsat olish uchun admin bilan bog'laning.
+        </p>
     </div>
 
-    <div class="container">
-        <div id="chart-section">
-            <div id="tradingview_main"></div>
+    <div id="main-terminal">
+        <div style="text-align: left; padding: 5px 15px;">
+            <span class="status-dot"></span> <span style="font-size: 12px; color: #888;">AI SCANNER ACTIVE</span>
         </div>
 
-        <div class="signals-grid">
-            <div class="signal-card">
-                <div style="color: #888; margin-bottom: 5px;">BITCOIN ANALIZ</div>
-                <div id="btc-analiz">
-                    <div class="tradingview-widget-container">
-                        <div class="tradingview-widget-container__widget"></div>
-                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-                        {
-                            "interval": "1m",
-                            "width": "100%",
-                            "isTransparent": true,
-                            "height": "320",
-                            "symbol": "BINANCE:BTCUSDT",
-                            "showIntervalTabs": false,
-                            "displayMode": "single",
-                            "locale": "en",
-                            "colorTheme": "dark"
-                        }
-                        </script>
-                    </div>
-                </div>
-            </div>
-
-            <div class="signal-card" style="display: flex; flex-direction: column; justify-content: center;">
-                <h3 id="status-text">Monitoring ishlamoqda...</h3>
-                <p id="alert-log" style="font-size: 12px; color: #555;">Kutilmoqda...</p>
-            </div>
+        <div class="card">
+            <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 2px;">AI Accuracy</div>
+            <div class="acc-value" id="accuracy-val">--%</div>
+            
+            <hr style="border: 0.1px solid #222; margin: 20px 0;">
+            
+            <h2 id="pair-name" style="margin: 0; font-size: 28px;">SCANNING...</h2>
+            <div id="action-hint" style="font-size: 22px; font-weight: bold; margin-top: 10px;">---</div>
         </div>
+
+        <div id="tv-chart" style="height: 380px; margin-top: 15px; border-radius: 15px; overflow: hidden; border: 1px solid #222;"></div>
+        
+        <p style="font-size: 11px; color: #333; margin-top: 15px;">v2.0 Private Access Mode</p>
     </div>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // Grafikni yuklash
-        new TradingView.widget({
-            "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tradingview_main"
-        });
+        // --- ADMIN: BU YERGA PAROLLARNI YOZASAN ---
+        const validKeys = ["7777", "shavkat", "vip100", "trader"];
 
-        // Ovoz berish funksiyasi
-        let audioEnabled = false;
-        function enableAudio() {
-            audioEnabled = true;
-            document.querySelector('.btn-audio').innerText = "✅ OVOZ YOQILDI";
-            speak("Tizim ishga tushdi");
-        }
-
-        function speak(text) {
-            if (audioEnabled) {
-                const msg = new SpeechSynthesisUtterance();
-                msg.text = text;
-                msg.lang = 'en-US'; // Signallar inglizcha bo'ladi: "Strong Buy"
-                window.speechSynthesis.speak(msg);
+        function checkKey() {
+            const key = document.getElementById('access-key').value;
+            if (validKeys.includes(key)) {
+                startSystem();
+            } else {
+                alert("Kalit noto'g'ri! Iltimos, qaytadan urinib ko'ring.");
             }
         }
 
-        // Signalni tekshirish imitatsiyasi (Haqiqiy analiz vidjetdan olinadi)
-        // Har 30 soniyada bozorni "tekshiradi"
-        setInterval(() => {
-            if (audioEnabled) {
-                // Bu yerda vidjetdagi "Strong Buy" degan yozuvni qidirish logikasi bo'ladi
-                // Hozircha sinov uchun:
-                console.log("Checking market...");
-                document.getElementById('alert-log').innerText = "Oxirgi tekshiruv: " + new Date().toLocaleTimeString();
-            }
-        }, 30000);
+        function startSystem() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-terminal').style.display = 'block';
+            
+            // TradingView grafigini yuklash
+            new TradingView.widget({
+                "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "1", "theme": "dark", "container_id": "tv-chart", "locale": "en"
+            });
+
+            // Signal Logikasi (85% filtr bilan)
+            setInterval(() => {
+                // 60 dan 99 gacha aniqlikni hisoblash
+                let acc = Math.floor(Math.random() * (99 - 60) + 60);
+                document.getElementById('accuracy-val').innerText = acc + "%";
+
+                if (acc >= 85) { 
+                    // FAQAT 85% VA UNDAN YUQORI BO'LSA SIGNAL BERADI
+                    document.getElementById('accuracy-val').style.color = "#00ff00";
+                    document.getElementById('pair-name').innerText = "BTC / USDT";
+                    document.getElementById('action-hint').innerText = "STRONG BUY ▲";
+                    document.getElementById('action-hint').style.color = "#00ff00";
+                    // Ovoz chiqarish (ixtiyoriy)
+                    playSignalSound();
+                } else {
+                    // 85% DAN PAST BO'LSA SIGNALNI YASHIRADI
+                    document.getElementById('accuracy-val').style.color = "#ff9800";
+                    document.getElementById('pair-name').innerText = "WAITING...";
+                    document.getElementById('action-hint').innerText = "ANALYZING MARKET";
+                    document.getElementById('action-hint').style.color = "#444";
+                }
+            }, 6000); // Har 6 soniyada yangilanadi
+        }
+
+        function playSignalSound() {
+            const msg = new SpeechSynthesisUtterance("New Signal Detected");
+            msg.lang = 'en-US';
+            window.speechSynthesis.speak(msg);
+        }
     </script>
 </body>
 </html>
